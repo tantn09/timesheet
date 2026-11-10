@@ -1,0 +1,14 @@
+{
+  "name": "timesheet-app",
+  "private": true,
+  "packageManager": "pnpm@10.30.1",
+  "scripts": {
+    "dev": "pnpm --parallel --filter web --filter api dev",
+    "dev:fe": "pnpm --filter web dev",
+    "dev:be": "pnpm --filter api dev",
+    "build": "pnpm --filter api build && pnpm --filter web build",
+    "db:generate": "pnpm --filter api prisma generate",
+    "db:migrate": "pnpm --filter api prisma migrate dev",
+    "db:seed": "pnpm --filter api prisma db seed"
+  }
+}

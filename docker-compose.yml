@@ -1,0 +1,54 @@
+services:
+  postgres:
+    image: postgres:17-alpine
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: timesheet
+      POSTGRES_PASSWORD: timesheet
+      POSTGRES_DB: timesheet
+    ports:
+      - "5432:5432"
+    volumes:
+      - timesheet-db:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U timesheet -d timesheet"]
+      interval: 5s
+      timeout: 3s
+      retries: 10
+
+  api:
+    build:
+      context: .
+      dockerfile: timesheet-be/Dockerfile
+    restart: unless-stopped
+    depends_on:
+      postgres:
+        condition: service_healthy
+    environment:
+      DATABASE_URL: postgresql://timesheet:timesheet@postgres:5432/timesheet?schema=public
+      API_PORT: 4000
+      COOKIE_SECURE: "false"
+      INVOICE_ISSUER_NAME: ${INVOICE_ISSUER_NAME:-Your Name}
+      INVOICE_ISSUER_EMAIL: ${INVOICE_ISSUER_EMAIL:-you@example.com}
+      INVOICE_ISSUER_PHONE: ${INVOICE_ISSUER_PHONE:-}
+      INVOICE_BANK_ACCOUNT_HOLDER: ${INVOICE_BANK_ACCOUNT_HOLDER:-}
+      INVOICE_BANK_SORT_CODE: ${INVOICE_BANK_SORT_CODE:-}
+      INVOICE_BANK_ACCOUNT_NUMBER: ${INVOICE_BANK_ACCOUNT_NUMBER:-}
+      INVOICE_BANK_IBAN: ${INVOICE_BANK_IBAN:-}
+    ports:
+      - "4000:4000"
+
+  web:
+    build:
+      context: .
+      dockerfile: timesheet-fe/Dockerfile
+    restart: unless-stopped
+    depends_on:
+      - api
+    environment:
+      API_ORIGIN: http://api:4000
+    ports:
+      - "3000:3000"
+
+volumes:
+  timesheet-db:
